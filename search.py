@@ -30,7 +30,7 @@ def search(maze, searchMethod):
         "bfs": bfs,
         "dfs": dfs,
         "greedy": greedy,
-        "astar": astar,
+        "astar": astar
     }.get(searchMethod)(maze)
 
 
@@ -40,7 +40,7 @@ def bfs(maze):
     result = bfs_search_func(maze, [maze.getStart()], [stack])
     # TODO: Write your code here
     # return path, num_states_explored
-    return result[1], 0
+    return result[1], len(visited_queue)
 
 
 def bfs_search_func(maze, fathers, search_queues):
@@ -70,7 +70,7 @@ def dfs(maze):
     # return path, num_states_explored
     result = dfs_search_func(maze, [], maze.getStart())
 
-    return result[1], 0
+    return result[1], len(visited_queue)
 
 
 def dfs_search_func(maze, finalized_queue_, start_point):
@@ -100,7 +100,7 @@ def greedy(maze):
     # return path, num_states_explored
     result = greedy_search_func(maze, [], maze.getStart())
     print(result)
-    return result[1], 0
+    return result[1], len(visited_queue)
 
 
 def get_dist(point, objective, current_length):
@@ -135,13 +135,13 @@ def greedy_search_func(maze, finalized_queue_, start_point):
                 pass
     return [False]
 
-
+'''
 def astar(maze):
     result = astar_search_func(maze, [], maze.getStart())
     # return path, num_states_explored
-    return result[1], 0
+    return result[1], len(visited_queue)
 
-
+'''
 def get_astar_dist(point, objective, current_length):
     return math.sqrt((point[0] - objective[0])**2 + abs(point[1] - objective[1])**2) + current_length
 
@@ -173,3 +173,60 @@ def astar_search_func(maze, finalized_queue_, start_point):
                 finalized_queue.remove(point["point"])
                 pass
     return [False]
+
+
+def astar(maze):
+    result = astar_search_func_multipoint(maze, maze.getStart())
+    # return path, num_states_explored
+    return result, 0
+
+
+def astar_search_func2(maze, finalized_queue_, start_point, objective):
+    global visited_queue
+    neighbors = maze.getNeighbors(start_point[0], start_point[1])
+    searched_queue = []
+    for point in neighbors:
+        searched_queue.append({"point": point, "dist": get_astar_dist(point, objective, len(finalized_queue_))})
+    searched_queue = sorted(searched_queue, key=lambda i: i['dist'])
+
+    finalized_queue = finalized_queue_
+    # Generate the new queue
+    visited_queue.append(start_point)
+    for point in searched_queue:
+        if not (point["point"] in visited_queue):
+            # Go through the valid neighbors
+            finalized_queue.append(point["point"])
+            if point["point"][0] == objective[0] and point["point"][1] == objective[1]:
+                finalized_queue.append(point["point"])
+                return [True, finalized_queue]
+            result = astar_search_func2(maze, finalized_queue, point["point"], objective)
+            if result[0]:
+                return [True, result[1]]
+            else:
+                finalized_queue.remove(point["point"])
+                pass
+    return [False]
+
+def astar_search_func_multipoint(maze, start_point):
+    global visited_queue
+    objectives = maze.getObjectives()
+    current_state = start_point
+
+    result = []
+
+    while len(objectives) > 0:
+        dist = []
+        for i in range(0, len(objectives)):
+            dist.append(get_dist(current_state, objectives[i], 0))
+        min_index = dist.index(min(dist))
+        objective = objectives[min_index]
+        print(current_state, objective)
+        temp_result = astar_search_func2(maze, [], current_state, objective)
+        current_state = objective
+        objectives.remove(objective)
+
+        result = result+temp_result[1]
+        visited_queue = []
+
+    return result
+
