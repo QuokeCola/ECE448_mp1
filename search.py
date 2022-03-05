@@ -39,7 +39,6 @@ def bfs(maze):
     route_queue = []
     stack = [maze.getStart()]
     result = bfs_search_func(maze, [], [stack])
-    print(result[1])
     # TODO: Write your code here
     # return path, num_states_explored
     return result[1], len(visited_queue)
@@ -157,7 +156,6 @@ def get_astar_dist(point, objective, current_length):
 
 def astar_multi_points(maze):
     result = astar_search_func_multipoint(maze, maze.getStart())
-    print(result)
     return result, 0
 
 
