@@ -38,7 +38,8 @@ def search(maze, searchMethod):
 def bfs(maze):
     route_queue = []
     stack = [maze.getStart()]
-    result = bfs_search_func(maze, [maze.getStart()], [stack])
+    result = bfs_search_func(maze, [], [stack])
+    print(result[1])
     # TODO: Write your code here
     # return path, num_states_explored
     return result[1], len(visited_queue)
@@ -62,14 +63,15 @@ def bfs_search_func(maze, fathers, search_queues):
     if result[0]:
         for search_queue in search_queues:
             if search_queue.__contains__(result[1][0]):
-                result[1].insert(0, fathers[search_queues.index(search_queue)])
+                if len(fathers) > 0:
+                    result[1].insert(0, fathers[search_queues.index(search_queue)])
                 return result
 
 
 def dfs(maze):
     # TODO: Write your code here
     # return path, num_states_explored
-    result = dfs_search_func(maze, [], maze.getStart())
+    result = dfs_search_func(maze, [maze.getStart()], maze.getStart())
 
     return result[1], len(visited_queue)
 
@@ -85,7 +87,6 @@ def dfs_search_func(maze, finalized_queue_, start_point):
             # Go through the valid neighbors
             finalized_queue.append(point)
             if maze.isObjective(point[0], point[1]):
-                finalized_queue.append(point)
                 return [True, finalized_queue]
             result = dfs_search_func(maze, finalized_queue, point)
             if result[0]:
@@ -99,7 +100,7 @@ def dfs_search_func(maze, finalized_queue_, start_point):
 def greedy(maze):
     # TODO: Write your code here
     # return path, num_states_explored
-    result = greedy_search_func(maze, [], maze.getStart())
+    result = greedy_search_func(maze, [maze.getStart()], maze.getStart())
     return result[1], len(visited_queue)
 
 
@@ -125,7 +126,6 @@ def greedy_search_func(maze, finalized_queue_, start_point):
             # Go through the valid neighbors
             finalized_queue.append(point["point"])
             if maze.isObjective(point["point"][0], point["point"][1]):
-                finalized_queue.append(point["point"])
                 return [True, finalized_queue]
             result = greedy_search_func(maze, finalized_queue, point["point"])
             if result[0]:
@@ -146,7 +146,7 @@ def astar(maze):
 
 
 def astar(maze):
-    result = astar_search_route(maze, [], maze.getStart(), maze.getObjectives()[0])
+    result = astar_search_route(maze, [maze.getStart()], maze.getStart(), maze.getObjectives()[0])
     # return path, num_states_explored
     return result[1], 0
 
@@ -157,6 +157,7 @@ def get_astar_dist(point, objective, current_length):
 
 def astar_multi_points(maze):
     result = astar_search_func_multipoint(maze, maze.getStart())
+    print(result)
     return result, 0
 
 
@@ -176,7 +177,6 @@ def astar_search_route(maze, finalized_queue_, start_point, objective):
             # Go through the valid neighbors
             finalized_queue.append(point["point"])
             if point["point"][0] == objective[0] and point["point"][1] == objective[1]:
-                finalized_queue.append(point["point"])
                 return [True, finalized_queue]
             result = astar_search_route(maze, finalized_queue, point["point"], objective)
             if result[0]:
@@ -186,12 +186,13 @@ def astar_search_route(maze, finalized_queue_, start_point, objective):
                 pass
     return [False]
 
+
 def astar_search_func_multipoint(maze, start_point):
     global visited_queue
     objectives = maze.getObjectives()
     current_state = start_point
 
-    result = []
+    result = [maze.getStart()]
 
     while len(objectives) > 0:
         dist = []
@@ -207,4 +208,3 @@ def astar_search_func_multipoint(maze, start_point):
         visited_queue = []
 
     return result
-
