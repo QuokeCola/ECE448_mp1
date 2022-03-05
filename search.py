@@ -20,6 +20,7 @@ files and classes when code is run, so be careful to not modify anything else.
 # Number of states explored should be a number.
 # maze is a Maze object based on the maze from the file specified by input filename
 # searchMethod is the search method specified by --method flag (bfs,dfs,greedy,astar)
+import math
 
 visited_queue = []
 
@@ -136,9 +137,13 @@ def greedy_search_func(maze, finalized_queue_, start_point):
 
 
 def astar(maze):
-    # TODO: Write your code here
+    result = astar_search_func(maze, [], maze.getStart())
     # return path, num_states_explored
-    return [], 0
+    return result[1], 0
+
+
+def get_astar_dist(point, objective, current_length):
+    return math.sqrt((point[0] - objective[0])**2 + abs(point[1] - objective[1])**2) + current_length
 
 
 def astar_search_func(maze, finalized_queue_, start_point):
@@ -148,7 +153,7 @@ def astar_search_func(maze, finalized_queue_, start_point):
     neighbors = maze.getNeighbors(start_point[0], start_point[1])
     searched_queue = []
     for point in neighbors:
-        searched_queue.append({"point": point, "dist": get_dist(point, objective, len(finalized_queue_))})
+        searched_queue.append({"point": point, "dist": get_astar_dist(point, objective, len(finalized_queue_))})
     searched_queue = sorted(searched_queue, key=lambda i: i['dist'])
 
     finalized_queue = finalized_queue_
