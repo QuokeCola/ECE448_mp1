@@ -148,7 +148,6 @@ class Application:
 
     # Draws the path (given as a list of (row, col) tuples) to the display context
     def drawPath(self, path):
-        print(path)
         for p in range(len(path)):
             color = self.getColor(len(path), p)
             self.drawSquare(path[p][0], path[p][1], color)
