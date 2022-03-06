@@ -103,8 +103,8 @@ def greedy(maze):
     return result[1], len(visited_queue)
 
 
-def get_dist(point, objective, current_length):
-    return abs(point[0] - objective[0]) + abs(point[1] - objective[1]) + current_length
+def get_manhattan_dist(point, objective):
+    return abs(point[0] - objective[0]) + abs(point[1] - objective[1])
 
 
 def greedy_search_func(maze, finalized_queue_, start_point):
@@ -114,7 +114,7 @@ def greedy_search_func(maze, finalized_queue_, start_point):
     neighbors = maze.getNeighbors(start_point[0], start_point[1])
     searched_queue = []
     for point in neighbors:
-        searched_queue.append({"point": point, "dist": get_dist(point, objective, 0)})
+        searched_queue.append({"point": point, "dist": get_manhattan_dist(point, objective, 0)})
     searched_queue = sorted(searched_queue, key=lambda i: i['dist'])
 
     finalized_queue = finalized_queue_
@@ -145,13 +145,9 @@ def astar(maze):
 
 
 def astar(maze):
-    result = astar_search_route(maze, [maze.getStart()], maze.getStart(), maze.getObjectives()[0])
-    # return path, num_states_explored
-    return result[1], 0
-
-
-def get_astar_dist(point, objective, current_length):
-    return math.sqrt((point[0] - objective[0])**2 + abs(point[1] - objective[1])**2) + current_length
+    result = astar_search_route(maze, maze.getStart(), maze.getObjectives()[0])
+    # # return path, num_states_explored
+    return result, 0
 
 
 def astar_multi_points(maze):
@@ -159,30 +155,57 @@ def astar_multi_points(maze):
     return result, 0
 
 
-def astar_search_route(maze, finalized_queue_, start_point, objective):
-    global visited_queue
-    neighbors = maze.getNeighbors(start_point[0], start_point[1])
-    searched_queue = []
-    for point in neighbors:
-        searched_queue.append({"point": point, "dist": get_astar_dist(point, objective, len(finalized_queue_))})
-    searched_queue = sorted(searched_queue, key=lambda i: i['dist'])
+def astar_search_route(maze, start, objective):
+    """Open List elements structure (point, father, known dist + estimate dist)"""
 
-    finalized_queue = finalized_queue_
-    # Generate the new queue
-    visited_queue.append(start_point)
-    for point in searched_queue:
-        if not (point["point"] in visited_queue):
-            # Go through the valid neighbors
-            finalized_queue.append(point["point"])
-            if point["point"][0] == objective[0] and point["point"][1] == objective[1]:
-                return [True, finalized_queue]
-            result = astar_search_route(maze, finalized_queue, point["point"], objective)
-            if result[0]:
-                return [True, result[1]]
-            else:
-                finalized_queue.remove(point["point"])
-                pass
-    return [False]
+    search_start_p = {"point": start, "father": (), "dist": 0, "est_dist": get_manhattan_dist(start, objective)}
+    open_list = [search_start_p]
+    visited_list = [search_start_p]
+    count = 0
+    while not search_start_p["point"] == objective:
+
+        """Dead end check"""
+        is_dead_end = True
+        idx = 0
+
+        open_list_points = []
+        visited_list_points = []
+        for i in open_list:
+            open_list_points.append(i["point"])
+        for i in visited_list:
+            visited_list_points.append(i["point"])
+
+        while is_dead_end:
+            """Spread the boundary from the search point"""
+            search_start_p = open_list[idx]
+
+            for point in maze.getNeighbors(search_start_p["point"][0], search_start_p["point"][1]):
+                if point not in open_list_points and point not in visited_list_points:
+                    open_list.append(
+                        {"point": point, "father": search_start_p["point"], "dist": search_start_p["dist"] + 1,
+                         "est_dist": search_start_p["dist"] + 1 + get_manhattan_dist(point, objective)})
+                    visited_list.append(open_list[-1])
+                    is_dead_end = False
+                if point == objective:
+                    '''Enable loop for first point'''
+                    visited_list.append(
+                        {"point": point, "father": search_start_p["point"], "dist": search_start_p["dist"] + 1,
+                         "est_dist": search_start_p["dist"] + 1 + get_manhattan_dist(point, objective)})
+                    visited_list_points.append(point)
+                    close_list = [point]
+                    while start not in close_list:
+                        child = close_list[0]
+                        child_index = visited_list_points.index(child)
+                        child_node = visited_list[child_index]
+                        father = child_node["father"]
+                        close_list.insert(0, father)
+                    return close_list
+
+            idx += 1
+        open_list.remove(search_start_p)
+        open_list = sorted(open_list, key=lambda j: j['est_dist'])
+        """Update search point"""
+        search_start_p = open_list[0]
 
 
 def astar_search_func_multipoint(maze, start_point):
@@ -195,14 +218,14 @@ def astar_search_func_multipoint(maze, start_point):
     while len(objectives) > 0:
         dist = []
         for i in range(0, len(objectives)):
-            dist.append(get_dist(current_state, objectives[i], 0))
+            dist.append(get_manhattan_dist(current_state, objectives[i]))
         min_index = dist.index(min(dist))
         objective = objectives[min_index]
-        temp_result = astar_search_route(maze, [], current_state, objective)
+        temp_result = astar_search_route(maze, current_state, objective)
         current_state = objective
         objectives.remove(objective)
 
-        result = result+temp_result[1]
+        result = result + temp_result
         visited_queue = []
 
     return result
