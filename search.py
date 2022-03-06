@@ -206,27 +206,47 @@ def astar_search_route(maze, start, objective):
         open_list = sorted(open_list, key=lambda j: j['est_dist'])
         """Update search point"""
         search_start_p = open_list[0]
+    return [start, objective], 0
 
 
 def astar_search_func_multipoint(maze, start_point):
     global visited_queue
     objectives = maze.getObjectives()
-    current_state = start_point
+    objectives.insert(0, maze.getStart())
 
-    result = [maze.getStart()]
-    count = 0
-    while len(objectives) > 0:
-        dist = []
-        for i in range(0, len(objectives)):
-            dist.append(get_manhattan_dist(current_state, objectives[i]))
-        min_index = dist.index(min(dist))
-        objective = objectives[min_index]
-        temp_result, temp_count = astar_search_route(maze, current_state, objective)
-        current_state = objective
-        objectives.remove(objective)
+    result = []
 
-        result += temp_result
-        count += temp_count
-        visited_queue = []
+    '''Generate the map'''
+    routes = []
+    explored = []
+    visited = []
+    for i in range(len(objectives)):
+        visited.append(False)
+        routes_j = []
+        explored_j = []
+        for j in range(len(objectives)):
+            single_route, count = astar_search_route(maze, objectives[i], objectives[j])
+            routes_j.append(single_route)
+            explored_j.append(count)
+        routes.append(routes_j)
+        explored.append(explored_j)
+    target_count = len(objectives)
+    visited[0] = True
+    current_idx = 0
+    explored_count = 0
+    while target_count > 1:
+        min_idx = 0
+        min_dist = maze.rows * maze.cols
+        for i in range(len(objectives)):
+            if (not visited[i]) and len(routes[current_idx][i]) < min_dist:
+                min_dist = len(routes[current_idx][i])
+                min_idx = i
+        result += routes[current_idx][min_idx]
+        explored_count += explored[current_idx][min_idx]
+        if target_count > 2:
+            result.pop()
+        visited[min_idx] = True
+        target_count -= 1
+        current_idx = min_idx
 
-    return result, count
+    return result, explored_count
