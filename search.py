@@ -147,12 +147,12 @@ def astar(maze):
 def astar(maze):
     result = astar_search_route(maze, maze.getStart(), maze.getObjectives()[0])
     # # return path, num_states_explored
-    return result, 0
+    return result
 
 
 def astar_multi_points(maze):
     result = astar_search_func_multipoint(maze, maze.getStart())
-    return result, 0
+    return result
 
 
 def astar_search_route(maze, start, objective):
@@ -199,7 +199,7 @@ def astar_search_route(maze, start, objective):
                         child_node = visited_list[child_index]
                         father = child_node["father"]
                         close_list.insert(0, father)
-                    return close_list
+                    return close_list, len(visited_list)
 
             idx += 1
         open_list.remove(search_start_p)
@@ -214,18 +214,19 @@ def astar_search_func_multipoint(maze, start_point):
     current_state = start_point
 
     result = [maze.getStart()]
-
+    count = 0
     while len(objectives) > 0:
         dist = []
         for i in range(0, len(objectives)):
             dist.append(get_manhattan_dist(current_state, objectives[i]))
         min_index = dist.index(min(dist))
         objective = objectives[min_index]
-        temp_result = astar_search_route(maze, current_state, objective)
+        temp_result, temp_count = astar_search_route(maze, current_state, objective)
         current_state = objective
         objectives.remove(objective)
 
-        result = result + temp_result
+        result += temp_result
+        count += temp_count
         visited_queue = []
 
-    return result
+    return result, count
